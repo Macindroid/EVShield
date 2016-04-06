@@ -1,7 +1,11 @@
 #include <EVShieldAGS.h>
 #include <EVs_NXTLight.h>
 
+<<<<<<< HEAD
 //hi
+=======
+//test
+>>>>>>> master
 int
 
 EVShield          evshield(0x34,0x36);
