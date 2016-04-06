@@ -43,7 +43,7 @@ void loop()
   // Replace with auto calibration / control board switch
   
   int LMotorPowerOutside = 20;
-  int LMotorPowerInside = 4;
+  int LMotorPowerInside = 20;
   // Motor Turn Ratio
 
   LLightValue1 = GLS1.readRaw();
@@ -51,25 +51,25 @@ void loop()
   //Serial.println(LLightValue1);
   //Serial.println(LLightValue2);
 
-  if (LLightValue1 < LTreshold1 && LLightValue2 < LTreshold2)      // White & White
+  if ((LLightValue1 < LTreshold1) && (LLightValue2 < LTreshold2))      // White & White
   {
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerOutside);
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LMotorPowerOutside); 
     Serial.println("Forward");
   }
-  else if (LLightValue1 < LTreshold1 && LLightValue2 > LTreshold2) // White & Black
+  else if ((LLightValue1 < LTreshold1) && (LLightValue2 > LTreshold2)) // White & Black
   {
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, LMotorPowerInside);
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LMotorPowerOutside); 
     Serial.println("Right");
   }
-  else if (LLightValue1 > LTreshold1 && LLightValue2 < LTreshold2) // Black & White
+  else if ((LLightValue1 > LTreshold1) && (LLightValue2 < LTreshold2)) // Black & White
   {
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerOutside);
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, LMotorPowerInside); 
     Serial.println("Left");
   }
-  else if (LLightValue1 > LTreshold1 && LLightValue2 > LTreshold2) // Black & Black (Green / Turn Hints)
+  else if ((LLightValue1 > LTreshold1) && (LLightValue2 > LTreshold2)) // Black & Black (Green / Turn Hints)
   {
     Serial.println("Green");
     while (true) 
