@@ -1,4 +1,4 @@
-#include <EVShield.h>
+4#include <EVShield.h>
 #include <EVs_NXTLight.h>
 
 EVShield     GEVShield(0x34,0x36); 
@@ -43,7 +43,7 @@ void loop()
   // Replace with auto calibration / control board switch
   
   int LMotorPowerOutside = 20;
-  int LMotorPowerInside = 30;
+  int LMotorPowerInside = 15;
   // Motor Turn Ratio
 
   LLightValue1 = GLS1.readRaw();
