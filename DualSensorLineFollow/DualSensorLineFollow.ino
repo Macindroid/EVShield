@@ -43,7 +43,7 @@ void loop()
   // Replace with auto calibration / control board switch
   
   int LMotorPowerOutside = 20;
-  int LMotorPowerInside = 20;
+  int LMotorPowerInside = 30;
   // Motor Turn Ratio
 
   LLightValue1 = GLS1.readRaw();
