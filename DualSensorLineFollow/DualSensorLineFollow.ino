@@ -38,14 +38,16 @@ void loop()
   int LLightValue2;
   // Raw Light Value 
   
-  int LTreshold1 = 585; 
-  int LTreshold2 = 585; 
+  int LTreshold1 = 537; 
+  int LTreshold2 = 537; 
   // Replace with auto calibration / control board switch
   
   int LMotorPowerOutside = 20;
-  int LMotorPowerInside = 15;
+  int LMotorPowerInside = -30;
+  int LFwdPower = 20;
   // Motor Turn Ratio
-
+while (true)
+{
   LLightValue1 = GLS1.readRaw();
   LLightValue2 = GLS2.readRaw();
   //Serial.println(LLightValue1);
@@ -53,21 +55,21 @@ void loop()
 
   if ((LLightValue1 < LTreshold1) && (LLightValue2 < LTreshold2))      // White & White
   {
-    GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerOutside);
-    GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LMotorPowerOutside); 
-    Serial.println("Forward");
+    GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LFwdPower);
+    GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LFwdPower); 
+    //Serial.println("Forward");
   }
   else if ((LLightValue1 < LTreshold1) && (LLightValue2 > LTreshold2)) // White & Black
   {
-    GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, LMotorPowerInside);
+    GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerInside);
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LMotorPowerOutside); 
-    Serial.println("Right");
+    //Serial.println("Left");
   }
   else if ((LLightValue1 > LTreshold1) && (LLightValue2 < LTreshold2)) // Black & White
   {
     GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerOutside);
-    GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, LMotorPowerInside); 
-    Serial.println("Left");
+    GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LMotorPowerInside); 
+    //Serial.println("Right");
   }
   else if ((LLightValue1 > LTreshold1) && (LLightValue2 > LTreshold2)) // Black & Black (Green / Turn Hints)
   {
@@ -82,5 +84,5 @@ void loop()
   {
     Serial.println("Silver");
   }
-  
+}  
 }
