@@ -15,24 +15,12 @@ int GThreshold1;
 int GThreshold2;   
 
 
-void trunc(AValue)
-{
-  int i;
-  float f;
-  
-  AValue = i;
-  f = 3.6; 
-  i = (int) f;
-  
-  return i;
-}
 
 
 
 void saveToFile(int AMemAdvs, AValue)
 {
-  int TH1;
-  TH1 = trunc(AValue);
+ 
 }
 
 int readFromFile(int AMemAdvs)
