@@ -1,33 +1,59 @@
 #include <EVShield.h>
 #include <EVs_NXTLight.h>
+#include <EEPROM.h>
 
 EVShield     GEVShield(0x34,0x36); 
 EVs_NXTLight GLS1;
 EVs_NXTLight GLS2;   
       
-const int CModePin = 2;
+const int CModePin    = 2;
 const int CConfirmPin = 4;
-const int CLedPin1 = 7;
-const int CLedPin2 = 8;
-const int CLedPin3 = 12;
+const int CLedPin1    = 7;
+const int CLedPin2    = 8;
+const int CLedPin3    = 12;
 
 int GThreshold1; 
 int GThreshold2;   
 
 
 
+/******DataSaving/Reading******/
 
-
-void saveToFile(int AMemAdvs, AValue)
+void saveToFile(int AMemAdrs1, int AMemAdrs2, int AValue)
 {
+  int LHigh = 0;
+  int LLow  = 0;
+  int LValue = 0;
+  int LValue2 = 0;
+  
+  LHigh = ((AValue >> 8) & 0xff);
+  LLow  = AValue & 0xff;
+
+  EEPROM.write(AMemAdrs1, LHigh);
+  EEPROM.write(AMemAdrs2, LLow);
+  
+  LValue = EEPROM.read(AMemAdrs1);
+  LValue2 = EEPROM.read(AMemAdrs2);
+  
  
 }
 
-int readFromFile(int AMemAdvs)
+int readFromFile(int AMemAdrs1, int AMemAdrs2)
 {
+  int LAfter = 0;
+  int LHigh  = 0;
+  int LLow   = 0;
+
+  LHigh = EEPROM.read(AMemAdrs1);
+  LLow = EEPROM.read(AMemAdrs2);
   
+  LAfter = (((LHigh & 0xff) << 8) | (LLow & 0xff));
+
+  return LAfter;
 }
 
+
+/******TurnHints******/
 
 
 void LHLineFollow()
@@ -75,9 +101,7 @@ void RHLineFollow()
 }
 
 
-
-
-
+/******HelpfulFunctions******/
 
 
 void waitForConfirm()
@@ -87,6 +111,10 @@ void waitForConfirm()
     delay(20);
   }
 }
+
+
+
+
 
 void setup() 
 {
@@ -117,6 +145,10 @@ void setup()
     }
 }
 
+
+/******MainProgram******/
+
+
 void loop() 
 {
   int LLightValue1;
@@ -128,14 +160,11 @@ void loop()
   int LFwdPower = 10;
   // Motor Turn Ratio
 
-
-
-
   if (digitalRead(CModePin) != 1)
   {
-    
-    GEVShield.bank_b.motorStop(SH_Motor_1, SH_Next_Action_Float);
-    GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Float);
+
+
+    /******CALIBRATION******/
     
     int LGreen1;
     int LGreen2;
@@ -143,11 +172,15 @@ void loop()
     int LWhite2;
     int LSilver1;
     int LSilver2;
+
+    int LSave1;
+    int LSave2;
     
     delay(1000);
     
     digitalWrite(CLedPin1, HIGH); // Green
     waitForConfirm();
+    
     LGreen1 = GLS1.readRaw();
     LGreen2 = GLS2.readRaw();
     Serial.println(LGreen2);
@@ -156,6 +189,7 @@ void loop()
 
     digitalWrite(CLedPin2, HIGH); // White
     waitForConfirm();
+    
     LWhite1 = GLS1.readRaw();
     LWhite2 = GLS2.readRaw();
     Serial.println(LWhite2);
@@ -164,16 +198,20 @@ void loop()
 
     digitalWrite(CLedPin3, HIGH); // Silver
     waitForConfirm();
+    
     LSilver1 = GLS1.readRaw();
     LSilver2 = GLS2.readRaw();
     digitalWrite(CLedPin3, LOW);
     delay(200);
  
     
-    GThreshold1 = (LGreen1 + LWhite1) / 2;
-    GThreshold2 = (LGreen2 + LWhite2) / 2;
-    Serial.println(GThreshold1);
-    Serial.println(GThreshold2);
+    LSave1 = (LGreen1 + LWhite1) / 2;
+    LSave2 = (LGreen2 + LWhite2) / 2;
+    saveToFile(0, 1, LSave1); 
+    saveToFile(2, 3, LSave2); 
+
+    Serial.println(LSave1);
+    Serial.println(LSave2);
     while(digitalRead(CModePin) != 1)
     {
       digitalWrite(CLedPin1, HIGH);
@@ -197,10 +235,14 @@ void loop()
 
 
 
-
   
   else
   { 
+
+   GThreshold1 = readFromFile(0, 1);
+   GThreshold2 = readFromFile(2, 3);
+    /******LineFollow******/
+    
     LLightValue1 = GLS1.readRaw();
     LLightValue2 = GLS2.readRaw();
 
