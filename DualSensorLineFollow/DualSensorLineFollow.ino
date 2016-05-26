@@ -61,32 +61,42 @@ void turnHints()
 {
 	int LOriginalReading;
 
-	GLSMiddle.init(&GEVShield, );									//add port for middle light sensor
+	GLSMiddle.init(&GEVShield, SH_BAS1);								
 	GLSMiddle.setReflected();
 
 	LOriginalReading = GLSMiddle.readRaw();
-  GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 20)
-  GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, 5)
+  GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 10);
+  GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, 5);
 
-	while (LOriginalReading - GLSMiddle.readRaw()  < 5);
+	while ((GLSMiddle.readRaw() - LOriginalReading) < 5);
 	{
 		delay(50);
 	}
-  GEVShield.bank_b.motorStop(SH_Motor_1);
-  GEVShield.bank_b.motorStop(SH_Motor_2);
+  GEVShield.bank_b.motorStop(SH_Motor_1, SH_Next_Action_Float);
+  GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Float);
+  delay(1000);
+  if (LOriginalReading < GLSMiddle.readRaw())
+  {
+    Serial.println("Left");
+    LHLineFollow();
+  }
+  else if(LOriginalReading > GLSMiddle.readRaw())
+  {
+    Serial.println("Right");
+    RHLineFollow();
+  }
   
-
 }
 
-void LHLineFollow()
+void RHLineFollow()
 {
 	int LCount;
 	int LLightValue1;
 
 	while(LCount > 10)
 	{
-		LLightValue1 = GLS2.readRaw();
-		if (LLightValue1 < GThreshold1)
+		LLightValue1 = GLS1.readRaw();
+		if (LLightValue1 > GThreshold1)
 		{
 			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 20);
 			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, 5);
@@ -100,7 +110,7 @@ void LHLineFollow()
 	}
 }
 
-void RHLineFollow()
+void LHLineFollow()
 {
 	int LCount;
 	int LLightValue2;
@@ -210,7 +220,7 @@ void loop()
 
 		LGreen1 = GLS1.readRaw();
 		LGreen2 = GLS2.readRaw();
-		Serial.println(LGreen2);
+		//Serial.println(LGreen2);
 		digitalWrite(CLedPin1, LOW);
 		delay(200);
 
@@ -219,10 +229,10 @@ void loop()
 
 		LWhite1 = GLS1.readRaw();
 		LWhite2 = GLS2.readRaw();
-		Serial.println(LWhite2);
+		//Serial.println(LWhite2);
 		digitalWrite(CLedPin2, LOW);
 		delay(200);
-
+/*
 		digitalWrite(CLedPin3, HIGH); // Silver
 		waitForConfirm();
 
@@ -230,13 +240,14 @@ void loop()
 		LSilver2 = GLS2.readRaw();
 		digitalWrite(CLedPin3, LOW);
 		delay(200);
-
+*/
 
 		LSave1 = (LGreen1 + LWhite1) / 2;
 		LSave2 = (LGreen2 + LWhite2) / 2;
 		saveToFile(0, 1, LSave1);
 		saveToFile(2, 3, LSave2);
 
+    Serial.println("Prev EEPROM Save");
 		Serial.println(LSave1);
 		Serial.println(LSave2);
 		while(digitalRead(CModePin) != 1)
@@ -296,9 +307,12 @@ void loop()
 			Serial.println("Light Sensor 1:");
 			Serial.println(LLightValue1);
 			Serial.println(GThreshold1);
+      Serial.println("               ");
 			Serial.println("Light Sensor 2:");
 			Serial.println(LLightValue2);
 			Serial.println(GThreshold2);
+
+      turnHints();
 
 			while (true)
 			{
@@ -308,6 +322,7 @@ void loop()
 		}
 		else //Silver
 		{
+      Serial.println("               ");
 			Serial.println("Silver");
 			Serial.println(LLightValue1);
 			Serial.println(GThreshold1);
