@@ -1,9 +1,9 @@
 
-const int CSwitchModePin = 2;
-const int CSwitchAcceptPin = 4;
-const int CLedPin1 =  7;
-const int CLedPin2 =  8;
-const int CLedPin3 =  12;
+const int CSwitchModePin = 12;
+const int CSwitchAcceptPin = 8;
+const int CLedPin1 =  2;
+const int CLedPin2 =  4;
+const int CLedPin3 =  7;
 
 void setup() {
   pinMode(CLedPin1, OUTPUT);

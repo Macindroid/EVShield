@@ -1,5 +1,6 @@
 #include <EVShield.h>
 #include <EVs_NXTLight.h>
+#include <EVs_NXTServo.h>
 #include <EEPROM.h>
 
 EVShield		 GEVShield(0x34,0x36);
@@ -7,11 +8,11 @@ EVs_NXTLight GLS1;
 EVs_NXTLight GLS2;
 EVs_NXTLight GLSMiddle;
 
-const int CModePin		= 2;
-const int CConfirmPin = 4;
-const int CLedPin1		= 7;
-const int CLedPin2		= 8;
-const int CLedPin3		= 12;
+const int CLedPin1		= 2;
+const int CLedPin2		= 4;
+const int CLedPin3		= 7;
+const int CConfirmPin = 8;
+const int CModePin    = 12;
 
 int GThreshold1;
 int GThreshold2;
@@ -61,19 +62,16 @@ void turnHints()
 {
 	int LOriginalReading;
 
-	GLSMiddle.init(&GEVShield, SH_BAS1);								
-	GLSMiddle.setReflected();
-
 	LOriginalReading = GLSMiddle.readRaw();
   GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 10);
-  GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, 5);
+  GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, 5);
 
 	while ((GLSMiddle.readRaw() - LOriginalReading) < 5);
 	{
 		delay(50);
 	}
   GEVShield.bank_b.motorStop(SH_Motor_1, SH_Next_Action_Float);
-  GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Float);
+  GEVShield.bank_a.motorStop(SH_Motor_1, SH_Next_Action_Float);
   delay(1000);
   if (LOriginalReading < GLSMiddle.readRaw())
   {
@@ -99,11 +97,11 @@ void RHLineFollow()
 		if (LLightValue1 > GThreshold1)
 		{
 			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 20);
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, 5);
+			GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, 5);
 		}
 		else
 		{
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, 20);
+			GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 20);
 			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, 5);
 		}
 		LCount = LCount + 1;
@@ -120,13 +118,13 @@ void LHLineFollow()
 		LLightValue2 = GLS2.readRaw();
 		if (LLightValue2 < GThreshold2)
 		{
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, 20);
+			GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 20);
 			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, 5);
 		}
 		else
 		{
 			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 20);
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, 5);
+			GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, 5);
 		}
 		LCount = LCount + 1;
 	}
@@ -166,13 +164,18 @@ void setup()
 		Serial.println ("-------------------------------------");
 		Serial.println ("Starting dual sensor line following");
 		Serial.println ("-------------------------------------");
+ 
 
 		GEVShield.init( SH_HardwareI2C );
-		GLS1.init(&GEVShield, SH_BBS1);
-		GLS2.init(&GEVShield, SH_BBS2);
+		GLS1.init(&GEVShield, SH_BAS1);
+		GLS2.init(&GEVShield, SH_BBS1);
+    GLSMiddle.init(&GEVShield, SH_BBS2);
 		GLS1.setReflected();
 		GLS2.setReflected();
+    GLSMiddle.setReflected();
+    
 		GEVShield.bank_b.motorReset();
+    GEVShield.bank_a.motorReset();
 
 
 		Serial.println("Press Confirm To Continue");
@@ -180,6 +183,7 @@ void setup()
 		{
 			delay(50);
 		}
+    Serial.println ("");
 }
 
 
@@ -192,14 +196,17 @@ void loop()
 	int LLightValue2;
 	// Raw Light Value
 
-	int LMotorPowerOutside = 10;
-	int LMotorPowerInside = -5;
-	int LFwdPower = 10;
+  int LMotorPowerOutside = 10;
+  int LMotorPowerInside = 5;
+  int LFwdPower = 10;
+  
+  GThreshold1 = readFromFile(0, 1);
+  GThreshold2 = readFromFile(2, 3);
 	// Motor Turn Ratio
 
 	if (digitalRead(CModePin) != 1)
 	{
-
+    Serial.println("Calibration Sequence Commencing");
 
 		/******CALIBRATION******/
 
@@ -212,24 +219,36 @@ void loop()
 
 		int LSave1;
 		int LSave2;
-
-		delay(1000);
+   
+		delay(500);
 
 		digitalWrite(CLedPin1, HIGH); // Green
 		waitForConfirm();
 
 		LGreen1 = GLS1.readRaw();
 		LGreen2 = GLS2.readRaw();
-		//Serial.println(LGreen2);
+    Serial.println("Green 1: ");
+    Serial.println(LGreen1);
+    Serial.println("");
+    Serial.println("Green 2: ");
+		Serial.println(LGreen2);
+    Serial.println("");
 		digitalWrite(CLedPin1, LOW);
 		delay(200);
+
+
 
 		digitalWrite(CLedPin2, HIGH); // White
 		waitForConfirm();
 
 		LWhite1 = GLS1.readRaw();
 		LWhite2 = GLS2.readRaw();
-		//Serial.println(LWhite2);
+    Serial.println("White 1: ");
+    Serial.println(LWhite1);
+    Serial.println("");
+    Serial.println("White 2: ");
+		Serial.println(LWhite2);
+    Serial.println("");
 		digitalWrite(CLedPin2, LOW);
 		delay(200);
 /*
@@ -247,9 +266,12 @@ void loop()
 		saveToFile(0, 1, LSave1);
 		saveToFile(2, 3, LSave2);
 
-    Serial.println("Prev EEPROM Save");
+    Serial.println("Current EEPROM Save");
+    Serial.println("Light Sensor 1: ");
 		Serial.println(LSave1);
+    Serial.println("Light Sensor 2: ");
 		Serial.println(LSave2);
+    
 		while(digitalRead(CModePin) != 1)
 		{
 			digitalWrite(CLedPin1, HIGH);
@@ -269,6 +291,7 @@ void loop()
 		digitalWrite(CLedPin2, HIGH);
 		digitalWrite(CLedPin3, HIGH);
 		delay(200);
+    Serial.println("Line Follow Commencing");
 	}
 
 
@@ -276,28 +299,36 @@ void loop()
 
 	else
 	{
-
-	 GThreshold1 = readFromFile(0, 1);
-	 GThreshold2 = readFromFile(2, 3);
+   
+	 
 		/******LineFollow******/
-
+    
+  
 		LLightValue1 = GLS1.readRaw();
 		LLightValue2 = GLS2.readRaw();
-
+/*
+    Serial.println("Light Value 1: ");
+    Serial.println(LLightValue1);
+    Serial.println(GThreshold1);
+    Serial.println("Light Value 2: ");
+    Serial.println(LLightValue2);
+    Serial.println(GThreshold2);
+*/
 		if ((LLightValue1 < GThreshold1) && (LLightValue2 < GThreshold2))			// White & White
 		{
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LFwdPower);
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LFwdPower);
+			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 10);
+			GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, 10);
+      Serial.println("FWD");
 		}
 		else if ((LLightValue1 < GThreshold1) && (LLightValue2 > GThreshold2)) // White & Black
 		{
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerInside);
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LMotorPowerOutside);
+			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, LMotorPowerInside);
+			GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerOutside);
 		}
 		else if ((LLightValue1 > GThreshold1) && (LLightValue2 < GThreshold2)) // Black & White
 		{
 			GEVShield.bank_b.motorRunUnlimited(SH_Motor_1, SH_Direction_Reverse, LMotorPowerOutside);
-			GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, LMotorPowerInside);
+			GEVShield.bank_a.motorRunUnlimited(SH_Motor_1, SH_Direction_Forward, LMotorPowerInside);
 
 		}
 		else if ((LLightValue1 > GThreshold1) && (LLightValue2 > GThreshold2)) // Black & Black (Green / Turn Hints)
@@ -316,8 +347,9 @@ void loop()
 
 			while (true)
 			{
+        Serial.println("idfk");
 				GEVShield.bank_b.motorStop(SH_Motor_1, SH_Next_Action_Float);
-				GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Float);
+				GEVShield.bank_a.motorStop(SH_Motor_1, SH_Next_Action_Float); 
 			}
 		}
 		else //Silver
