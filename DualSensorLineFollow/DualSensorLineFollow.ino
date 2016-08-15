@@ -20,7 +20,7 @@ const int CModePin    = 12;
 const int CPower = 10;//Water Tower
 const int CLineFollowPowerForward = 10; //Line Follow
 const int CLineFollowPowerOutside = 10; //Line Follow
-const int CLineFollowPowerInside  = -10;//Line Follow
+const int CLineFollowPowerInside  = -5;//Line Follow
 
 int GThresholdRight;
 int GThresholdLeft;
@@ -98,20 +98,20 @@ void setLSValues(LSArray &ALSRaw){
 /* Brains */
 
 int LSValueToGreyScale(int ALSValue, int ABlackWhiteTH, int ASilverTH){
-  Serial.println("");
-  Serial.println("LS Value:");
+  /*Serial.println("");                     // WARNING THIS SLOWS EVERYTHING DOWN BY 10000000%
+  Serial.println("LS Value:");              // Can be worth it
   Serial.println(ALSValue);
   Serial.println("");
   Serial.println("Black & White TH:");
   Serial.println(ABlackWhiteTH);
   Serial.println("");
   Serial.println("White & Silver TH:");
-  Serial.println(ASilverTH);
+  Serial.println(ASilverTH);*/
   if (ALSValue >= ABlackWhiteTH && ALSValue >= ASilverTH)
     return gsBlack;
   else if (ALSValue <= ABlackWhiteTH && ALSValue >= ASilverTH)
     return gsWhite;
-  else //if (ALSValue <= ABlackWhiteTH && ALSValue <= ASilverTH)
+  else if (ALSValue <= ABlackWhiteTH && ALSValue <= ASilverTH)
     return gsSilver;
 }
 
@@ -153,7 +153,9 @@ void doLineFollow()
     turnHints();                                                                  // Turn Hints
   }
   else if ((LGreyScales.Right == gsSilver) and (LGreyScales.Left == gsSilver)){   // Silver & Silver
-    //Serial.println("Silver");
+    Serial.println("Silver");
+    motorsOff(); 
+    delay(50);
     //Serial.println(LGreyScales.Right);
     //Serial.println(LGreyScales.Left);
     silverCan();                                                                  // Can Tile
@@ -162,6 +164,7 @@ void doLineFollow()
     motorsOff();                                                                  // Water Tower
     waterTower();                                                                 
   }
+  delay(30);
 }
 
 /***** Individual Tiles *****/
@@ -190,7 +193,7 @@ void waterTower(){
   motorsOff();
 }
 
-/* Final Tile (Can Tile) */ 
+/* Final Tile (Can Tile) */
 void silverCan(){ 
   int LProximity; 
   //int LLSValue1 = 2550;
@@ -211,7 +214,7 @@ void silverCan(){
     rotateMotorsDeg(-CPower, CPower, 40);
   } 
   delay(50);
-  rotateMotorsDeg(CPower, CPower, 270);
+  rotateMotorsDeg(CPower, CPower, 290);
   delay(50);
   GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, 10);
   delay(300);
