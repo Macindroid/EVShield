@@ -17,7 +17,7 @@ const int CLedPin3		= 7;
 const int CConfirmPin = 8;
 const int CModePin    = 12;
 
-const int CPower = 10;//Water Tower
+const int CPower = 15; // Water Tower & Can Tile
 const int CLineFollowPowerForward = 10; //Line Follow
 const int CLineFollowPowerOutside = 10; //Line Follow
 const int CLineFollowPowerInside  = -5;//Line Follow
@@ -109,9 +109,9 @@ int LSValueToGreyScale(int ALSValue, int ABlackWhiteTH, int ASilverTH){
   Serial.println(ASilverTH);*/
   if (ALSValue >= ABlackWhiteTH && ALSValue >= ASilverTH)
     return gsBlack;
-  else if (ALSValue <= ABlackWhiteTH && ALSValue >= ASilverTH)
+  else if /*(ALSValue <= ABlackWhiteTH &&*/ (ALSValue >= ASilverTH)
     return gsWhite;
-  else if (ALSValue <= ABlackWhiteTH && ALSValue <= ASilverTH)
+  else //if (ALSValue <= ABlackWhiteTH && ALSValue <= ASilverTH)
     return gsSilver;
 }
 
@@ -160,10 +160,10 @@ void doLineFollow()
     //Serial.println(LGreyScales.Left);
     silverCan();                                                                  // Can Tile
   }
-  else if (LProximity < 200){                                                     // Ultrasonic Reading < 80
-    motorsOff();                                                                  // Water Tower
-    waterTower();                                                                 
-  }
+  //else if (LProximity < 200){                                                     // Ultrasonic Reading < 80
+    //motorsOff();                                                                  // Water Tower
+    //waterTower();                                                                 
+  //}
   delay(30);
 }
 
@@ -196,41 +196,73 @@ void waterTower(){
 /* Final Tile (Can Tile) */
 void silverCan(){ 
   int LProximity; 
+  int LTacho1; //actually millis -_-
+  int LTacho2; //actually millis -_-
+  int LSpinTime;
   //int LLSValue1 = 2550;
-  
+
+  // Open Claw
   GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, 10);
-  delay(300);
+  delay(100);
   GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Brake );
-  rotateMotorsDeg(CPower, CPower - 2, 680);
+
+  // Centre
+  rotateMotorsDeg(CPower, CPower - 3, 640);
+  delay(100);
+
+  // Spin
+  LTacho1 = millis();
   motorsOn(CPower,-CPower);
   delay(50);
-  while (LProximity > 250){
+  while (LProximity > 300){
     LProximity = GUS1.readProximity();
     delay(30);
   }
+  LTacho2 = millis();
+  LSpinTime = LTacho2 - LTacho1;
   motorsOff();
+  delay(50);
+
+  // Check for can
   delay(500);
-  if (LProximity > 250){
+  if (LProximity > 300){
     rotateMotorsDeg(-CPower, CPower, 40);
+    delay(50);
   } 
   delay(50);
-  rotateMotorsDeg(CPower, CPower, 290);
+
+  // Move towards can
+  rotateMotorsDeg(CPower, CPower, 270);
   delay(50);
-  GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, 10);
-  delay(300);
-  GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Brake );
-  delay(50);
-  motorsOn(CPower, CPower - 2);
-  //while (LLSValue1 > GThresholdRight);{
-    //LLSValue1 = GLS1.readRaw();
-    //delay(50);
-  //}
-  delay(1100);
-  motorsOff();
+
+  // Close Claw
   GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Forward, 10);
-  delay(300);
+  delay(100);
   GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Brake );
-  delay(5000);
+  delay(50);
+
+  // Push can out
+  rotateMotorsDeg(CPower, CPower, 180);
+  delay(50);
+
+  // Open claw
+  GEVShield.bank_b.motorRunUnlimited(SH_Motor_2, SH_Direction_Reverse, 10);
+  delay(100);
+  GEVShield.bank_b.motorStop(SH_Motor_2, SH_Next_Action_Brake );
+
+  // Centre
+  rotateMotorsDeg(-CPower, -CPower, 450);
+  delay(50);
+  
+  // Finding Silver
+  motorsOn(CPower,-CPower);
+  delay(LSpinTime);
+  motorsOff();
+  //rotateMotorsDeg(CPower, -CPower, 160);
+  delay(50);
+
+  // Wait for applause
+  delay(10000);
 }
 
 
